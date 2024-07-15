@@ -1,0 +1,57 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "run new-rest",
+            "program": "${workspaceFolder}/target/debug/new-rest",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "sourceMap": {},
+            "sourceLanguages": [
+                "rust"
+            ],
+            "env": {
+                "RUST_BACKTRACE": "short",
+                "ANSIBLE_HOSTS": "/Users/bohdan/.ansible/hosts",
+                "COMMAND_MODE": "unix2003",
+                "ELASTIC_ADDR": "http://localhost:30001",
+                "HOME": "/Users/bohdan",
+                "INDEX": "eng",
+                "JAVA_HOME": "/Library/Java/JavaVirtualMachines/openjdk-11.0.2.jdk/Contents/Home",
+                "LOGNAME": "bohdan",
+                "MallocNanoZone": "0",
+                "ORIGINAL_XDG_CURRENT_DESKTOP": "undefined",
+                "PATH": "/Users/bohdan/.cargo/bin:/Users/bohdan/.cache/rebar3/bin:/usr/local/bin:/usr/local/go/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/bohdan/go/bin",
+                "PIS_KAFKA_ADVERTISED_HOST_NAME": "localhost",
+                "PWD": "/",
+                "SERVER_ADDR": ":8080",
+                "SHELL": "/bin/bash",
+                "SHLVL": "1",
+                "SSH_AUTH_SOCK": "/private/tmp/com.apple.launchd.eKgtcHURoq/Listeners",
+                "TMPDIR": "/var/folders/7h/wqbcwwm93nbgjn1jl_rtttf80000gn/T/",
+                "USER": "bohdan",
+                "VSCODE_AMD_ENTRYPOINT": "vs/workbench/api/node/extensionHostProcess",
+                "VSCODE_CODE_CACHE_PATH": "/Users/bohdan/Library/Application Support/Code/CachedData/1a5daa3a0231a0fbba4f14db7ec463cf99d7768e",
+                "VSCODE_CRASH_REPORTER_PROCESS_TYPE": "extensionHost",
+                "VSCODE_CWD": "/",
+                "VSCODE_HANDLES_UNCAUGHT_ERRORS": "true",
+                "VSCODE_IPC_HOOK": "/Users/bohdan/Library/Application Support/Code/1.84-main.sock",
+                "VSCODE_NLS_CONFIG": "{\"locale\":\"en-gb\",\"osLocale\":\"en-ua\",\"availableLanguages\":{},\"_languagePackSupport\":true}",
+                "VSCODE_PID": "18230",
+                "XPC_FLAGS": "0x0",
+                "XPC_SERVICE_NAME": "application.com.microsoft.VSCode.37973575.37973581",
+                "_": "/Applications/Visual Studio Code.app/Contents/MacOS/Electron",
+                "__CFBundleIdentifier": "com.microsoft.VSCode",
+                "__CF_USER_TEXT_ENCODING": "0x1F5:0x0:0x0",
+                "ELECTRON_RUN_AS_NODE": "1",
+                "VSCODE_L10N_BUNDLE_LOCATION": ""
+            }
+        }
+    ],
+    "MIDebuggerPath": "/usr/bin/lldb"
+}
