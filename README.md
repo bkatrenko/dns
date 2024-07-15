@@ -5,7 +5,7 @@
 This repository contains an implementation of the DNS (Domain Name System) protocol in Rust. It includes both client and server components, demonstrating the ability to handle DNS queries and responses effectively.
 
 ## Features
-- **DNS Client**: Sends DNS queries to specified DNS servers and processes the responses. Application implements protocol from scratch.
+- **DNS Client**: Sends DNS queries to specified DNS servers and processes the responses. Application implements protocol `from scratch, without any dependencies`. Currently supports `A, AAAA, NS, CNAME, MX, OPT` record types.
 - **DNS Server**: Receives DNS queries and sends appropriate responses based on the implementation.
 - **Rust Implementation**: Utilizes the power and safety features of the Rust programming language.
 
