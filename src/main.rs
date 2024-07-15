@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn serve(args: &Vec<String>){
-    let port_number: u16 = args[1].parse::<u16>().unwrap();
+    let port_number: u16 = args[2].parse::<u16>().unwrap();
     let local_address: SocketAddr =
         SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port_number);
 
@@ -90,4 +90,3 @@ fn serve(args: &Vec<String>){
     });
 }
 
-// m.apple.com

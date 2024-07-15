@@ -7,8 +7,8 @@ use std::time::Instant;
 use rand::Rng;
 
 pub fn visually_resolve(args: &Vec<String>) {
-    let host_name = &args[1];
-    let record_type = &args[2];
+    let host_name = &args[2];
+    let record_type = &args[3];
 
     let sock = UdpSocket::bind(SocketAddr::V4(SocketAddrV4::new(
         Ipv4Addr::new(0, 0, 0, 0),

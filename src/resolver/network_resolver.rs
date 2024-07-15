@@ -134,7 +134,7 @@ fn make_question(responses: &Vec<DNSResponsePart>, record_type: DNSRecordType) -
         buffer_offset: 0,
         question_name: get_server_name(get_random_response(&responses, record_type).unwrap().data),
         dns_record_class: enums::DNSRecordClass::IN,
-        dns_record_type: DNSRecordType::A,
+        dns_record_type: record_type,
     };
 }
 
