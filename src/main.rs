@@ -23,7 +23,7 @@ const MAX_MESSAGE_BUFFER_SIZE: usize = 512;
 
 // In order to run the application, use cargo:
 // ```
-// cargo run -- 35670
+// cargo run serve 58980
 // ```
 // Where 35670 is a port number application should listen to.
 // In order to try it out, you could use dig, f.e.:
