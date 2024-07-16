@@ -61,6 +61,11 @@ pub enum DNSRecordType {
     // MX (mail exchange) records store instructions for directing emails to mail servers following
     // the SMTP protocol.
     MX = 15,
+    // Originally for arbitrary human-readable text in a DNS record. Since the early
+    // 1990s, however, this record more often carries machine-readable data, such as
+    // specified by RFC 1464, opportunistic encryption, Sender Policy Framework, DKIM,
+    // DMARC, DNS-SD, etc.
+    TXT = 16,
     // AAAA records work the same as A records in that they store IP addresses connected to domain names.
     // The only difference is that AAAA records hold IPv6 addresses.
     AAAA = 28,
@@ -84,6 +89,7 @@ impl TryFrom<u16> for DNSRecordType {
             2 => Ok(DNSRecordType::NS),
             5 => Ok(DNSRecordType::CNAME),
             15 => Ok(DNSRecordType::MX),
+            16 => Ok(DNSRecordType::TXT),
             28 => Ok(DNSRecordType::AAAA),
             41 => Ok(DNSRecordType::OPT),
             _ => {
@@ -181,6 +187,7 @@ impl FromStr for DNSRecordType {
             "CNAME" => DNSRecordType::CNAME,
             "MX" => DNSRecordType::MX,
             "AAAA" => DNSRecordType::AAAA,
+            "TXT" => DNSRecordType::TXT,
             _ => DNSRecordType::Unknown,
         };
 
@@ -229,7 +236,17 @@ pub enum DNSRecord {
         len: u16,
         data: String,
     },
+    TXT {
+        len: u16,
+        data: String,
+    },
     Unknown,
+}
+
+impl fmt::Display for DNSRecord {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl DNSRecord {
@@ -249,7 +266,7 @@ impl DNSRecord {
             }),
             DNSRecordType::CNAME => {
                 let name_length = bytes.get_u16()?;
-                let name = super::DNSName::read_name(bytes)?;
+                let name = super::DNSName::read_string(bytes)?;
 
                 Ok(DNSRecord::CNAME {
                     len: name_length,
@@ -258,7 +275,7 @@ impl DNSRecord {
             }
             DNSRecordType::NS => {
                 let name_length = bytes.get_u16()?;
-                let name = super::DNSName::read_name(bytes)?;
+                let name = super::DNSName::read_string(bytes)?;
 
                 Ok(DNSRecord::NS {
                     len: name_length,
@@ -284,7 +301,7 @@ impl DNSRecord {
             DNSRecordType::MX => {
                 let name_length = bytes.get_u16()?;
                 let priority = bytes.get_u16()?;
-                let host_name = super::DNSName::read_name(bytes)?;
+                let host_name = super::DNSName::read_string(bytes)?;
 
                 Ok(DNSRecord::MX {
                     len: name_length,
@@ -301,11 +318,27 @@ impl DNSRecord {
                         data: "".to_string(),
                     });
                 }
-                let name = super::DNSName::read_name(bytes)?;
+                let name = super::DNSName::read_string(bytes)?;
 
                 Ok(DNSRecord::Opt {
                     len: data_length,
                     data: name.value,
+                })
+            }
+
+            DNSRecordType::TXT => {
+                let data_length = bytes.get_u16()?;
+                if data_length == 0 {
+                    return Ok(DNSRecord::TXT {
+                        len: data_length,
+                        data: "".to_string(),
+                    });
+                }
+                let txt_row = super::DNSName::read_text_label(bytes)?;
+
+                Ok(DNSRecord::TXT {
+                    len: data_length,
+                    data: txt_row,
                 })
             }
 
@@ -387,6 +420,23 @@ impl DNSRecord {
             }
 
             DNSRecord::Opt { len, data } => {
+                bytes.write_u16(*len);
+
+                if *len == 0 {
+                    return Ok(());
+                }
+
+                let mut name = DNSName {
+                    value: data.to_string(),
+                    offset: bytes.get_offset() as u16,
+                };
+
+                name.write_name(bytes, base_name)?;
+
+                Ok(())
+            }
+
+            DNSRecord::TXT { len, data } => {
                 bytes.write_u16(*len);
 
                 if *len == 0 {

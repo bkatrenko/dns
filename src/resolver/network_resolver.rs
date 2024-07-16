@@ -3,8 +3,8 @@ use crate::parser::{enums, DNSPacket, DNSQuestionPart, DNSResponsePart};
 use crate::resolver::root_servers::get_root_servers;
 use crate::resolver::UdpResolver;
 use rand::{seq::SliceRandom, Rng};
-use std::net::{IpAddr, SocketAddr};
 use std::error::Error;
+use std::net::{IpAddr, SocketAddr};
 
 use super::NetworkResolver;
 
@@ -48,8 +48,8 @@ pub fn recursive_resolve(
 
     loop {
         println!(
-            "INTO id: {id}, resolve {} with NS address: {ns_address}",
-            question_part.question_name
+            "INTO id: {id}, resolve {} with NS address: {}, question is: {:?}",
+            question_part.question_name, ns_address, question_part
         );
 
         let mut root_response = resolve(question_part, resolver, ns_address)?;
@@ -98,7 +98,7 @@ pub fn recursive_resolve(
             packet.header.is_query = true;
 
             let question = make_question(&root_response.authorities, DNSRecordType::NS);
-           
+
             println!(
                 "INFO id: {id}, recursive resolve: {}",
                 question.question_name
@@ -134,7 +134,7 @@ fn make_question(responses: &Vec<DNSResponsePart>, record_type: DNSRecordType) -
         buffer_offset: 0,
         question_name: get_server_name(get_random_response(&responses, record_type).unwrap().data),
         dns_record_class: enums::DNSRecordClass::IN,
-        dns_record_type: record_type,
+        dns_record_type: enums::DNSRecordType::A,
     };
 }
 
@@ -216,7 +216,7 @@ mod tests {
     };
     use std::error::Error;
     use std::io::Error as errors;
-    use std::net::{SocketAddr, Ipv4Addr};
+    use std::net::{Ipv4Addr, SocketAddr};
 
     struct MockResolver<'a> {
         responses: Vec<&'a DNSPacket>,

@@ -5,7 +5,6 @@ use crate::parser::{enums, DNSPacket};
 
 pub mod network_resolver;
 pub mod root_servers;
-pub mod visual_resolve;
 
 const MAX_RECV_MESSAGE_SIZE: usize = 4096;
 

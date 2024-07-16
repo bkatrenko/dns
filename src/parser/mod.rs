@@ -293,7 +293,8 @@ impl DNSQuestionPart {
                 | enums::DNSRecordType::CNAME
                 | enums::DNSRecordType::NS
                 | enums::DNSRecordType::AAAA
-                | enums::DNSRecordType::MX => {
+                | enums::DNSRecordType::MX
+                | enums::DNSRecordType::TXT => {
                     let dns_record_class: enums::DNSRecordClass = bytes.get_u16()?.try_into()?;
                     questions.push(DNSQuestionPart {
                         buffer_offset: offset,
@@ -413,7 +414,7 @@ impl DNSName {
         Ok(())
     }
 
-    fn read_name(bytes: &mut buffer::ByteBuffer) -> Result<DNSName, Box<dyn Error>> {
+    fn read_string(bytes: &mut buffer::ByteBuffer) -> Result<DNSName, Box<dyn Error>> {
         let mut name = DNSName::default();
         let initial_offset = bytes.get_offset();
 
@@ -431,13 +432,15 @@ impl DNSName {
                 let current_offset = bytes.get_offset();
 
                 bytes.set_offset(new_position as usize)?;
-                name.value.push_str(Self::read_name(bytes)?.value.as_str());
+                name.value
+                    .push_str(Self::read_string(bytes)?.value.as_str());
 
                 match bytes.set_offset(current_offset) {
                     Ok(_) => print!(""),
                     Err(e) => {
                         if current_offset == bytes.get_vec().len() {
-                            println!("DEBUG: reached end of the buffer while read the name")
+                            println!("DEBUG: reached end of the buffer while read the name: {current_offset}: {}", 
+                            bytes.get_vec().len())
                         } else {
                             panic!(
                                 "error while read the name: {}, offset: {}, buffer len: {}",
@@ -482,6 +485,22 @@ impl DNSName {
             }
         }
     }
+
+    fn read_text_label(bytes: &mut buffer::ByteBuffer) -> Result<String, Box<dyn Error>> {
+        let mut res: String = "".to_string();
+
+        let byte: u8 = bytes.get_u8()?;
+
+        if byte == 0 {
+            return Ok(res);
+        }
+
+        for _ in 0..byte {
+            res.push_str(&String::from_utf8_lossy(&[bytes.get_u8()?]));
+        }
+
+        return Ok(res);
+    }
 }
 
 impl DNSResponsePart {
@@ -505,7 +524,7 @@ impl DNSResponsePart {
         for _ in 0..responses_count {
             let mut response: DNSResponsePart = DNSResponsePart::default();
 
-            response.name = DNSName::read_name(bytes)?;
+            response.name = DNSName::read_string(bytes)?;
             response.record_type = bytes.get_u16()?.try_into()?;
 
             response.record_class = bytes.get_u16()?.try_into()?;
@@ -528,7 +547,7 @@ impl DNSResponsePart {
         for _ in 0..authorities_count {
             let mut response: DNSResponsePart = DNSResponsePart::default();
 
-            response.name = DNSName::read_name(bytes)?;
+            response.name = DNSName::read_string(bytes)?;
             response.record_type = bytes.get_u16()?.try_into()?;
             response.record_class = bytes.get_u16()?.try_into()?;
 
@@ -550,7 +569,7 @@ impl DNSResponsePart {
         for _ in 0..resources_count {
             let mut response: DNSResponsePart = DNSResponsePart::default();
 
-            response.name = DNSName::read_name(bytes)?;
+            response.name = DNSName::read_string(bytes)?;
             response.record_type = bytes.get_u16()?.try_into()?;
 
             match response.record_type {
@@ -567,7 +586,7 @@ impl DNSResponsePart {
                     res.push(response)
                 }
 
-                enums::DNSRecordType::OPT => {
+                enums::DNSRecordType::OPT | enums::DNSRecordType::TXT => {
                     response.udp_length = bytes.get_u16()?;
                     response.ttl = bytes.get_u32()?;
                     response.data = enums::DNSRecord::from_bytes(bytes, response.record_type)?;
@@ -606,7 +625,7 @@ impl DNSResponsePart {
                 Ok(buffer.get_vec())
             }
 
-            enums::DNSRecordType::OPT => {
+            enums::DNSRecordType::OPT | enums::DNSRecordType::TXT => {
                 buffer.write_u8(0);
                 buffer.write_u16(self.record_type as u16);
                 buffer.write_u16(self.udp_length as u16);
@@ -647,6 +666,7 @@ mod tests {
     const MX_RESPONSE_PACKET_PATH: &str = "test_files/mx_response_packet.hex";
     const AAAA_QUERY_PACKET_PATH: &str = "test_files/aaaa_query_packet.hex";
     const AAAA_RESPONSE_PACKET_PATH: &str = "test_files/aaaa_response_packet.hex";
+    const TXT_RESPONSE_PACKET_PATH: &str = "test_files/txt_response_packet.hex";
     const MULTIPART_RESPONSE_PACKET_PATH: &str = "test_files/multipart_response.hex";
 
     #[test]
@@ -1221,6 +1241,67 @@ mod tests {
 
         let response_bytes = packet.to_bytes().unwrap();
         assert_eq!(test_file_content, response_bytes)
+    }
+
+    #[test]
+    fn parse_txt_response_packet() {
+        let test_file_content = fs::read(TXT_RESPONSE_PACKET_PATH).unwrap();
+        let packet = DNSPacket::from_bytes(test_file_content.clone()).unwrap();
+
+        assert_eq!(packet.header.id, 58813);
+        assert_eq!(packet.header.is_query, false);
+        assert_eq!(packet.header.op_code, OpCode::Query);
+        assert_eq!(packet.header.authoritative_answer_flag, false);
+        assert_eq!(packet.header.truncate_flag, false);
+        assert_eq!(packet.header.recursion_desired, true);
+        assert_eq!(packet.header.recursion_available, true);
+        assert_eq!(packet.header.zero, None);
+        assert_eq!(packet.header.error_code, ErrorCode::NoError);
+        assert_eq!(packet.header.qd_count, 1);
+        assert_eq!(packet.header.an_count, 3);
+        assert_eq!(packet.header.ns_count, 0);
+
+        assert_eq!(packet.question_part[0].buffer_offset, 12);
+        assert_eq!(packet.question_part[0].question_name, "korrespondent.net");
+        assert_eq!(packet.question_part[0].dns_record_type, DNSRecordType::TXT);
+        assert_eq!(packet.question_part[0].dns_record_class, DNSRecordClass::IN);
+
+        let response_data = match &packet.response_part[0].data {
+            DNSRecord::TXT { len, data } => (len, data),
+            _ => panic!("expect TXT record"),
+        };
+
+        assert_eq!(
+            response_data.1.to_string(),
+            "google-site-verification=CFcAoeqNeHl3uc-VCQkjOZ9EF1Utcn0J9x7bThF7SM4"
+        );
+        assert_eq!(*response_data.0, 69);
+
+        let response_data = match &packet.response_part[1].data {
+            DNSRecord::TXT { len, data } => (len, data),
+            _ => panic!("expect TXT record"),
+        };
+
+        assert_eq!(
+            response_data.1.to_string(),
+            "yandex-verification: 67c648566e370b6d"
+        );
+        assert_eq!(*response_data.0, 38);
+
+        let response_data = match &packet.response_part[2].data {
+            DNSRecord::TXT { len, data } => (len, data),
+            _ => panic!("expect TXT record"),
+        };
+
+        assert_eq!(
+            response_data.1.to_string(),
+            "v=spf1 ip4:193.29.200.0/24 ~all"
+        );
+        assert_eq!(*response_data.0, 32);
+
+        // TODO: test the encoding
+        // let response_bytes = packet.to_bytes().unwrap();
+        // assert_eq!(test_file_content, response_bytes)
     }
 
     #[test]
