@@ -1,8 +1,8 @@
 use crate::parser::DNSPacket;
 use crate::resolver::{network_resolver, NetworkResolver, UdpResolver};
 use nanoid::nanoid;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::error::Error;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 
 use parser::enums;
 use std::time::Instant;

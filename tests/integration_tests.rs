@@ -106,4 +106,30 @@ mod integration_tests {
             "TXT { len: 38, data: \"yandex-verification: 67c648566e370b6d\" }"
         );
     }
+
+    #[test]
+    fn resolve_cname() {
+        let mut resolver = dns::create_resolver();
+
+        let host_name = String::from("en.wikipedia.org");
+        let record_type = String::from("CNAME");
+        let request_id = String::from("1");
+
+        let question = dns::create_question(&host_name, &record_type);
+        let res = dns::resolve(&mut resolver, question.to_bytes().unwrap(), &request_id);
+
+        assert_eq!(res.is_err(), false);
+
+        let response = res.unwrap();
+
+        assert_eq!(response.response_part.len(), 2);
+        assert_eq!(
+            response.response_part[0].data.to_string(),
+            "CNAME { len: 17, cname: \"dyna.wikimedia.org\" }"
+        );
+        assert_eq!(
+            response.response_part[1].data.to_string(),
+            "A { len: 4, ip: 185.15.59.224 }"
+        );
+    }
 }

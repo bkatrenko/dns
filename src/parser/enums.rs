@@ -46,6 +46,7 @@ impl fmt::Display for OpCode {
     }
 }
 
+// TODO: Add/implement SOA record type
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum DNSRecordType {
     // A (address) records are one of the most basic and commonly used DNS record types.
@@ -71,6 +72,7 @@ pub enum DNSRecordType {
     AAAA = 28,
     // This is a pseudo-record type needed to support EDNS.
     OPT = 41,
+    // You know nothing, John Snow
     Unknown,
 }
 
