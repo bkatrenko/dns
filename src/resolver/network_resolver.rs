@@ -256,7 +256,7 @@ mod tests {
             use std::fs::File;
             use std::io::prelude::*;
 
-            let mut file = File::create("/Users/bohdan/Desktop/lalala dns/foo.hex")?;
+            let mut file = File::create("mock.hex")?;
             file.write_all(&bytes)?;
 
             return Ok(bytes);
